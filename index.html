@@ -1,859 +1,713 @@
 <!DOCTYPE html>
-<html lang="fr">
+<html lang="en" dir="ltr">
 <head>
-<meta charset="UTF-8"/>
-<meta name="viewport" content="width=device-width,initial-scale=1"/>
-<title>PharmaGest Pro</title>
-<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Turbine Guardian — Industrial Fault Detection System</title>
+<meta name="description" content="AI-powered gas turbine sensor fault detection. Real NASA C-MAPSS data. Instant decisions. XAI explanations. Maintenance recommendations.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
 <style>
-*{box-sizing:border-box;margin:0;padding:0}
-:root{
-  --bg:#0b0f1a;--surf:#131929;--surf2:#1a2235;--brd:#1e2d45;
-  --txt:#e2e8f0;--mut:#64748b;--acc:#3b82f6;--acc2:#6366f1;
-  --grn:#10b981;--red:#ef4444;--yel:#f59e0b;--pur:#8b5cf6;
+/* ── TOKENS ── */
+:root {
+  --black:   #04060d;
+  --deep:    #070c1a;
+  --panel:   #0d1527;
+  --border:  #1a2d50;
+  --border2: #243d6a;
+  --accent:  #00e5ff;
+  --accent2: #ff5c5c;
+  --accent3: #00ff9d;
+  --gold:    #ffd166;
+  --text:    #dce8f5;
+  --muted:   #5a7a9a;
+  --muted2:  #8aaccc;
+  --mono:    'Space Mono', monospace;
+  --sans:    'Space Grotesk', sans-serif;
 }
-body{background:var(--bg);color:var(--txt);font-family:'Segoe UI',Tahoma,sans-serif;
-  min-height:100vh;display:flex;overflow:hidden}
-::-webkit-scrollbar{width:5px}
-::-webkit-scrollbar-thumb{background:#1e2d45;border-radius:99px}
 
-/* SIDEBAR */
-#sb{width:225px;background:var(--surf);border-right:1px solid var(--brd);
-  display:flex;flex-direction:column;height:100vh;flex-shrink:0}
-.logo{padding:1.3rem 1.1rem;border-bottom:1px solid var(--brd);
-  display:flex;align-items:center;gap:11px}
-.logo-ic{width:40px;height:40px;border-radius:11px;
-  background:linear-gradient(135deg,var(--acc),var(--acc2));
-  display:flex;align-items:center;justify-content:center;font-size:1.25rem;flex-shrink:0}
-.logo h2{font-size:.92rem;font-weight:800;line-height:1.2}
-.logo small{font-size:.65rem;color:var(--acc)}
-nav{padding:.7rem .6rem;flex:1;overflow-y:auto}
-.ni{width:100%;padding:9px 12px;border-radius:9px;border:none;cursor:pointer;
-  display:flex;align-items:center;gap:9px;margin-bottom:3px;
-  background:transparent;color:var(--mut);font-weight:500;font-size:.83rem;
-  text-align:left;font-family:inherit;transition:all .2s}
-.ni:hover{background:rgba(59,130,246,.08);color:var(--txt)}
-.ni.active{background:linear-gradient(135deg,rgba(59,130,246,.2),rgba(99,102,241,.2));
-  color:#93c5fd;font-weight:700}
-.ni .ic{font-size:1rem;width:20px;text-align:center}
-.nbadge{margin-left:auto;background:var(--red);color:#fff;border-radius:99px;
-  font-size:.62rem;padding:2px 7px;font-weight:800;display:none}
-.sf{padding:.8rem 1rem;border-top:1px solid var(--brd)}
-.sf-date{font-size:.7rem;color:var(--mut);text-align:center}
-.sf-btns{display:flex;gap:6px;margin-top:8px}
-.sf-btn{flex:1;padding:6px;border-radius:7px;border:none;cursor:pointer;
-  font-size:.72rem;font-weight:600;font-family:inherit;transition:all .2s}
-.sf-btn.export{background:rgba(16,185,129,.15);color:var(--grn)}
-.sf-btn.logout{background:rgba(239,68,68,.12);color:var(--red)}
+* { margin:0; padding:0; box-sizing:border-box; }
+html { scroll-behavior:smooth; }
 
-/* MAIN */
-#main{flex:1;overflow-y:auto;height:100vh;padding:1.5rem}
-.page{display:none}.page.active{display:block}
-h1{font-size:1.35rem;font-weight:800;margin-bottom:1.4rem}
-
-/* STATS */
-.stat-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(185px,1fr));
-  gap:.9rem;margin-bottom:1.5rem}
-.stat{background:var(--surf);border:1px solid var(--brd);border-radius:13px;
-  padding:1rem 1.2rem;display:flex;align-items:center;gap:.9rem;
-  transition:transform .2s}
-.stat:hover{transform:translateY(-2px)}
-.stat-ic{width:44px;height:44px;border-radius:11px;display:flex;
-  align-items:center;justify-content:center;font-size:1.2rem;flex-shrink:0}
-.stat-lbl{font-size:.73rem;color:var(--mut);font-weight:600}
-.stat-val{font-size:1.25rem;font-weight:800;line-height:1.1}
-.stat-sub{font-size:.7rem;margin-top:2px}
-
-/* CARDS */
-.card{background:var(--surf);border:1px solid var(--brd);border-radius:13px;
-  overflow:hidden;margin-bottom:1.3rem}
-.ch{padding:.9rem 1.2rem;border-bottom:1px solid var(--brd);
-  display:flex;align-items:center;justify-content:space-between;gap:.8rem;flex-wrap:wrap}
-.ch h2{font-size:.92rem;font-weight:700;margin:0}
-table{width:100%;border-collapse:collapse;font-size:.82rem}
-thead tr{background:#0a0e18}
-th{padding:10px 13px;text-align:left;color:var(--mut);font-weight:600;white-space:nowrap}
-td{padding:10px 13px;border-top:1px solid rgba(30,45,69,.5);vertical-align:middle}
-tr:hover td{background:rgba(255,255,255,.018)}
-
-/* BADGE */
-.bdg{padding:3px 9px;border-radius:99px;font-size:.69rem;font-weight:700;
-  display:inline-flex;align-items:center;gap:4px}
-
-/* BTNS */
-.btn{padding:8px 16px;border-radius:8px;border:none;cursor:pointer;font-weight:600;
-  font-size:.81rem;display:inline-flex;align-items:center;gap:6px;
-  transition:all .18s;font-family:inherit}
-.btn:hover{opacity:.84;transform:translateY(-1px)}
-.btn-p{background:linear-gradient(135deg,var(--acc),var(--acc2));color:#fff}
-.btn-s{background:linear-gradient(135deg,var(--grn),#059669);color:#fff}
-.btn-d{background:linear-gradient(135deg,var(--red),#dc2626);color:#fff}
-.btn-w{background:linear-gradient(135deg,var(--yel),#d97706);color:#fff}
-.btn-g{background:transparent;color:var(--mut);border:1px solid var(--brd)}
-.btn-g:hover{color:var(--txt)}
-.btn-sm{padding:5px 10px;font-size:.74rem;border-radius:7px}
-.btn-ic{width:30px;height:30px;padding:0;justify-content:center;border-radius:7px}
-
-/* FORM */
-.fld{margin-bottom:.9rem}
-.fld label{display:block;color:var(--mut);font-size:.74rem;margin-bottom:5px;font-weight:600}
-input,select,textarea{width:100%;padding:9px 11px;background:#0b0f1a;
-  border:1px solid var(--brd);border-radius:8px;color:var(--txt);
-  font-size:.86rem;outline:none;font-family:inherit;transition:border .2s}
-input:focus,select:focus{border-color:var(--acc)}
-.g2{display:grid;grid-template-columns:1fr 1fr;gap:0 .9rem}
-
-/* MODAL */
-.ov{display:none;position:fixed;inset:0;background:rgba(0,0,0,.75);
-  z-index:1000;align-items:center;justify-content:center;padding:1rem}
-.ov.open{display:flex}
-.modal{background:var(--surf);border:1px solid var(--brd);border-radius:16px;
-  width:100%;max-width:480px;max-height:93vh;overflow-y:auto;
-  box-shadow:0 30px 60px rgba(0,0,0,.5)}
-.modal-w{max-width:660px}
-.mh{padding:1.1rem 1.3rem;border-bottom:1px solid var(--brd);
-  display:flex;align-items:center;justify-content:space-between}
-.mh h3{font-size:.92rem;font-weight:700}
-.mb{padding:1.3rem}
-.mf{display:flex;gap:9px;justify-content:flex-end;margin-top:1.1rem}
-
-/* TOAST */
-#toast{position:fixed;top:1.2rem;left:50%;transform:translateX(-50%);
-  padding:10px 22px;border-radius:10px;font-weight:700;font-size:.85rem;
-  z-index:3000;display:none;gap:8px;align-items:center;
-  box-shadow:0 10px 30px rgba(0,0,0,.4);white-space:nowrap}
-#toast.show{display:flex}
-#toast.ok{background:var(--grn);color:#fff}
-#toast.err{background:var(--red);color:#fff}
-
-/* POS */
-.pos-layout{display:grid;grid-template-columns:1fr 330px;gap:1.3rem}
-.med-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(155px,1fr));gap:9px}
-.mcard{background:var(--surf2);border:1px solid var(--brd);border-radius:11px;
-  padding:11px;cursor:pointer;transition:all .18s;user-select:none}
-.mcard:hover{border-color:var(--acc);transform:translateY(-2px);
-  box-shadow:0 6px 18px rgba(59,130,246,.18)}
-.mcard:active{transform:scale(.97)}
-.cart-box{background:var(--surf);border:1px solid var(--brd);border-radius:13px;
-  padding:1.1rem;display:flex;flex-direction:column;
-  height:calc(100vh - 120px);overflow:hidden}
-.ci{display:flex;align-items:center;gap:9px;padding:9px 0;
-  border-bottom:1px solid rgba(30,45,69,.45)}
-.qb{width:25px;height:25px;border-radius:6px;background:var(--brd);
-  border:none;color:var(--txt);cursor:pointer;font-size:.95rem;
-  display:flex;align-items:center;justify-content:center;transition:background .15s}
-.qb:hover{background:var(--acc)}
-.total-box{background:#0b0f1a;border-radius:9px;padding:11px;margin:.9rem 0}
-.tr{display:flex;justify-content:space-between;font-size:.83rem;margin-bottom:4px}
-
-/* SEARCH */
-.sw{position:relative;flex:1;min-width:180px}
-.sw svg{position:absolute;left:10px;top:50%;transform:translateY(-50%);
-  color:var(--mut);pointer-events:none}
-.sw input{padding-left:33px}
-
-/* CLIENT CARDS */
-.cg{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:1rem}
-.cc{background:var(--surf);border:1px solid var(--brd);border-radius:13px;padding:1.1rem}
-.debt-row{background:#0b0f1a;border-radius:8px;padding:10px 12px;
-  display:flex;justify-content:space-between;align-items:center;margin-top:10px}
-
-/* CHART */
-.chart-wrap{background:var(--surf);border:1px solid var(--brd);border-radius:13px;
-  padding:1.2rem;margin-bottom:1.3rem}
-
-/* ALERT SECTIONS */
-.asec{background:var(--surf);border-radius:13px;padding:1.1rem;margin-bottom:1.1rem}
-.asec.danger{border:1px solid rgba(239,68,68,.3)}
-.asec.warn{border:1px solid rgba(245,158,11,.3)}
-
-/* SCROLL */
-.sc{overflow-y:auto;max-height:calc(100vh - 200px)}
-
-@media(max-width:800px){
-  #sb{position:fixed;left:0;top:0;z-index:500;transform:translateX(-100%)}
-  #sb.open{transform:translateX(0)}
-  #main{padding:1rem}
-  .pos-layout{grid-template-columns:1fr}
-  .g2{grid-template-columns:1fr}
-  .stat-grid{grid-template-columns:1fr 1fr}
-  #mob-btn{display:flex!important}
+body {
+  background: var(--black);
+  color: var(--text);
+  font-family: var(--sans);
+  line-height: 1.6;
+  overflow-x: hidden;
 }
-#mob-btn{display:none;position:fixed;top:.8rem;right:.8rem;z-index:600;
-  width:38px;height:38px;border-radius:9px;background:var(--surf);
-  border:1px solid var(--brd);cursor:pointer;align-items:center;
-  justify-content:center;color:var(--txt);font-size:1.2rem}
+
+/* ── GRID TEXTURE ── */
+body::before {
+  content:'';
+  position:fixed; inset:0; z-index:0; pointer-events:none;
+  background-image:
+    linear-gradient(rgba(0,229,255,0.025) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0,229,255,0.025) 1px, transparent 1px);
+  background-size: 48px 48px;
+}
+
+/* ── GLOW BLOBS ── */
+.blob {
+  position:fixed; border-radius:50%; filter:blur(120px);
+  pointer-events:none; z-index:0;
+}
+.blob-1 { width:600px; height:600px; top:-200px; left:-150px; background:rgba(0,229,255,0.04); }
+.blob-2 { width:500px; height:500px; bottom:-100px; right:-100px; background:rgba(255,92,92,0.04); }
+
+/* ── SCROLL REVEAL ── */
+.reveal { opacity:0; transform:translateY(28px); transition:opacity .7s ease, transform .7s ease; }
+.reveal.visible { opacity:1; transform:none; }
+
+/* ── NAV ── */
+nav {
+  position:sticky; top:0; z-index:100;
+  display:flex; align-items:center; justify-content:space-between;
+  padding:0 clamp(1rem,5vw,5rem); height:62px;
+  background:rgba(4,6,13,0.88); backdrop-filter:blur(16px);
+  border-bottom:1px solid var(--border);
+}
+.nav-logo {
+  font-family:var(--mono); font-size:15px; font-weight:700;
+  color:var(--accent); letter-spacing:1px; display:flex; align-items:center; gap:8px;
+}
+.nav-logo .shield { font-size:20px; }
+.nav-links { display:flex; gap:28px; list-style:none; }
+.nav-links a {
+  font-size:13px; font-weight:500; color:var(--muted2);
+  text-decoration:none; transition:color .15s;
+}
+.nav-links a:hover { color:var(--text); }
+.nav-cta {
+  font-family:var(--mono); font-size:12px; font-weight:700;
+  background:var(--accent); color:#000;
+  padding:8px 20px; border-radius:6px; text-decoration:none;
+  transition:all .2s; letter-spacing:.5px;
+}
+.nav-cta:hover { background:#00bcd4; box-shadow:0 0 24px rgba(0,229,255,0.4); }
+
+/* ── HERO ── */
+.hero {
+  position:relative; z-index:1;
+  min-height:92vh;
+  display:flex; flex-direction:column;
+  align-items:center; justify-content:center;
+  text-align:center;
+  padding:80px clamp(1rem,5vw,5rem) 60px;
+}
+.hero-eyebrow {
+  font-family:var(--mono); font-size:11px; letter-spacing:3px;
+  color:var(--accent); text-transform:uppercase;
+  background:rgba(0,229,255,0.07);
+  border:1px solid rgba(0,229,255,0.18);
+  padding:6px 18px; border-radius:100px;
+  margin-bottom:36px;
+  display:inline-flex; align-items:center; gap:8px;
+}
+.hero-eyebrow::before {
+  content:''; width:6px; height:6px; border-radius:50%;
+  background:var(--accent); flex-shrink:0;
+  animation:pulse 2s infinite;
+}
+@keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:.4;transform:scale(.7)} }
+
+.hero h1 {
+  font-family:var(--mono); font-size:clamp(2.4rem,7vw,6.5rem);
+  font-weight:700; line-height:.95; letter-spacing:-1px;
+  margin-bottom:28px;
+}
+.hero h1 .line1 { display:block; color:var(--text); }
+.hero h1 .line2 {
+  display:block;
+  background:linear-gradient(90deg, var(--accent), var(--accent3));
+  -webkit-background-clip:text; -webkit-text-fill-color:transparent;
+}
+.hero-sub {
+  font-size:clamp(15px,2vw,19px); color:var(--muted2);
+  max-width:580px; line-height:1.7; margin-bottom:44px;
+}
+.hero-actions { display:flex; gap:14px; flex-wrap:wrap; justify-content:center; }
+.btn-primary {
+  font-family:var(--mono); font-size:13px; font-weight:700;
+  background:var(--accent); color:#000;
+  padding:14px 32px; border-radius:8px; text-decoration:none;
+  transition:all .2s; display:inline-flex; align-items:center; gap:8px;
+}
+.btn-primary:hover { background:#00bcd4; transform:translateY(-2px); box-shadow:0 12px 40px rgba(0,229,255,0.3); }
+.btn-ghost {
+  font-family:var(--mono); font-size:13px; font-weight:700;
+  background:transparent; color:var(--text);
+  padding:14px 28px; border-radius:8px; text-decoration:none;
+  border:1px solid var(--border2); transition:all .2s;
+  display:inline-flex; align-items:center; gap:8px;
+}
+.btn-ghost:hover { border-color:var(--muted2); transform:translateY(-2px); }
+
+/* ── TERMINAL DEMO ── */
+.terminal {
+  margin:60px auto 0; max-width:720px; width:100%;
+  background:#000; border:1px solid var(--border2);
+  border-radius:12px; overflow:hidden;
+  box-shadow:0 0 60px rgba(0,229,255,0.08);
+}
+.term-bar {
+  background:#111; padding:12px 16px;
+  display:flex; align-items:center; gap:8px;
+}
+.dot { width:12px; height:12px; border-radius:50%; }
+.dot-r{background:#ff5f57} .dot-y{background:#febc2e} .dot-g{background:#28c840}
+.term-title { font-family:var(--mono); font-size:11px; color:var(--muted); margin-left:auto; }
+.term-body { padding:20px 22px 24px; }
+.tl { font-family:var(--mono); font-size:13px; line-height:2.2; }
+.tc { color:var(--accent); }
+.tg { color:var(--accent3); }
+.ty { color:var(--gold); }
+.tr { color:var(--accent2); }
+.tm { color:var(--muted); }
+.tb { color:var(--text); }
+
+/* ── STATS BAND ── */
+.stats-band {
+  position:relative; z-index:1;
+  border-top:1px solid var(--border);
+  border-bottom:1px solid var(--border);
+  padding:40px clamp(1rem,5vw,5rem);
+  display:grid; grid-template-columns:repeat(4,1fr);
+  gap:24px;
+}
+.stat { text-align:center; }
+.stat-val {
+  font-family:var(--mono); font-size:2.6rem; font-weight:700;
+  background:linear-gradient(135deg, var(--accent), var(--accent3));
+  -webkit-background-clip:text; -webkit-text-fill-color:transparent;
+  line-height:1;
+}
+.stat-lbl { font-size:12px; color:var(--muted); margin-top:6px; letter-spacing:1px; text-transform:uppercase; }
+
+/* ── SECTION ── */
+section { position:relative; z-index:1; padding:90px clamp(1rem,5vw,5rem); }
+.section-tag {
+  font-family:var(--mono); font-size:10px; letter-spacing:3px;
+  color:var(--accent); text-transform:uppercase;
+  margin-bottom:14px; display:flex; align-items:center; gap:10px;
+}
+.section-tag::before { content:''; width:20px; height:1px; background:var(--accent); }
+h2 {
+  font-family:var(--mono); font-size:clamp(2rem,4.5vw,3.4rem);
+  font-weight:700; line-height:1.05; margin-bottom:14px; letter-spacing:-0.5px;
+}
+.section-sub { font-size:16px; color:var(--muted2); max-width:520px; margin-bottom:56px; }
+
+/* ── DECISION DEMO — signature element ── */
+.decision-showcase {
+  display:grid; grid-template-columns:1fr 1fr; gap:20px;
+  max-width:900px; margin:0 auto;
+}
+.decision-card {
+  background:var(--panel); border:1px solid var(--border);
+  border-radius:12px; padding:24px;
+  font-family:var(--mono); font-size:13px;
+}
+.decision-card.fault {
+  border-color:rgba(255,92,92,0.4);
+  background:rgba(255,92,92,0.04);
+  box-shadow:0 0 30px rgba(255,92,92,0.08);
+}
+.decision-card.normal {
+  border-color:rgba(0,255,157,0.3);
+  background:rgba(0,255,157,0.03);
+}
+.dc-label {
+  font-size:9px; letter-spacing:2px; text-transform:uppercase;
+  color:var(--muted); margin-bottom:14px;
+  display:flex; align-items:center; gap:8px;
+}
+.dc-label::after { content:''; flex:1; height:1px; background:var(--border); }
+.dc-status { font-size:1.3rem; font-weight:700; margin-bottom:16px; }
+.dc-row { display:flex; justify-content:space-between; padding:6px 0; border-bottom:1px solid var(--border); }
+.dc-row:last-child { border:none; }
+.dc-key { color:var(--muted); }
+.dc-val { font-weight:700; }
+.dc-action {
+  margin-top:14px; padding:10px 14px; border-radius:6px;
+  font-size:12px; line-height:1.5;
+}
+.fault .dc-action { background:rgba(255,92,92,0.1); color:var(--accent2); }
+.normal .dc-action { background:rgba(0,255,157,0.08); color:var(--accent3); }
+
+/* ── FEATURES GRID ── */
+.features-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:16px; }
+.feature-card {
+  background:var(--panel); border:1px solid var(--border);
+  border-radius:12px; padding:26px;
+  transition:all .25s; position:relative; overflow:hidden;
+}
+.feature-card::before {
+  content:''; position:absolute; top:0; left:0; right:0; height:2px;
+  background:linear-gradient(90deg, var(--accent), transparent);
+  opacity:0; transition:opacity .25s;
+}
+.feature-card:hover { border-color:var(--border2); transform:translateY(-3px); }
+.feature-card:hover::before { opacity:1; }
+.fc-icon { font-size:28px; margin-bottom:14px; }
+.fc-title { font-size:15px; font-weight:700; margin-bottom:8px; }
+.fc-desc { font-size:13px; color:var(--muted2); line-height:1.6; }
+.fc-tag {
+  display:inline-block; margin-top:14px;
+  font-family:var(--mono); font-size:9px; letter-spacing:1px;
+  padding:3px 8px; border-radius:4px;
+  background:rgba(0,229,255,0.08); color:var(--accent);
+  border:1px solid rgba(0,229,255,0.15);
+}
+
+/* ── NASA BADGE ── */
+.nasa-section {
+  background:linear-gradient(135deg, rgba(0,229,255,0.03), rgba(0,255,157,0.03));
+  border:1px solid var(--border); border-radius:16px;
+  padding:48px; display:grid; grid-template-columns:1fr 1fr; gap:48px;
+  align-items:center;
+}
+.nasa-badge-big {
+  font-family:var(--mono); font-size:10px; letter-spacing:2px;
+  color:var(--accent3); background:rgba(0,255,157,0.08);
+  border:1px solid rgba(0,255,157,0.2);
+  padding:6px 14px; border-radius:4px; display:inline-block; margin-bottom:16px;
+}
+.nasa-specs { display:flex; flex-direction:column; gap:10px; }
+.nasa-spec-row {
+  display:flex; justify-content:space-between; align-items:center;
+  padding:10px 0; border-bottom:1px solid var(--border);
+  font-family:var(--mono); font-size:13px;
+}
+.nasa-spec-row:last-child { border:none; }
+.nsr-key { color:var(--muted); font-size:11px; }
+.nsr-val { color:var(--accent); font-weight:700; }
+
+/* ── PIPELINE ── */
+.pipeline {
+  display:flex; align-items:stretch; gap:0;
+  background:var(--panel); border:1px solid var(--border);
+  border-radius:12px; overflow:hidden;
+}
+.pipe-step {
+  flex:1; padding:28px 20px; text-align:center;
+  border-right:1px solid var(--border); position:relative;
+}
+.pipe-step:last-child { border-right:none; }
+.pipe-step::after {
+  content:'→'; position:absolute; right:-14px; top:50%; transform:translateY(-50%);
+  font-family:var(--mono); color:var(--accent); font-size:18px; z-index:2;
+}
+.pipe-step:last-child::after { display:none; }
+.ps-num { font-family:var(--mono); font-size:11px; color:var(--muted); margin-bottom:8px; }
+.ps-icon { font-size:24px; margin-bottom:8px; }
+.ps-title { font-size:13px; font-weight:700; margin-bottom:4px; }
+.ps-desc { font-size:11px; color:var(--muted2); }
+
+/* ── PRICING ── */
+.pricing-grid { display:grid; grid-template-columns:1fr 1fr; gap:20px; max-width:800px; margin:0 auto; }
+.price-card {
+  background:var(--panel); border:1px solid var(--border);
+  border-radius:14px; padding:36px;
+}
+.price-card.featured {
+  border-color:rgba(0,229,255,0.35);
+  background:linear-gradient(135deg, rgba(0,229,255,0.04), var(--panel));
+  box-shadow:0 0 50px rgba(0,229,255,0.06);
+}
+.price-badge {
+  font-family:var(--mono); font-size:10px; letter-spacing:1px;
+  background:var(--accent); color:#000; padding:4px 12px;
+  border-radius:100px; display:inline-block; margin-bottom:16px; font-weight:700;
+}
+.price-name { font-size:18px; font-weight:700; margin-bottom:4px; }
+.price-tagline { font-size:13px; color:var(--muted2); margin-bottom:24px; }
+.price-amount {
+  font-family:var(--mono); font-size:4rem; font-weight:700;
+  color:var(--accent); line-height:1; margin-bottom:6px;
+}
+.price-amount span { font-size:1.5rem; vertical-align:super; }
+.price-was { font-family:var(--mono); font-size:12px; color:var(--muted); text-decoration:line-through; margin-bottom:28px; }
+.price-list { list-style:none; margin-bottom:28px; }
+.price-list li { font-size:13px; padding:8px 0; border-bottom:1px solid var(--border); display:flex; align-items:center; gap:8px; color:var(--muted2); }
+.price-list li:last-child { border:none; }
+.price-list li .ck { color:var(--accent3); font-size:15px; }
+.price-list li .nx { color:var(--muted); }
+
+/* ── FAQ ── */
+.faq { max-width:720px; margin:0 auto; }
+.faq-item { border-bottom:1px solid var(--border); padding:22px 0; cursor:pointer; }
+.faq-q {
+  display:flex; justify-content:space-between; align-items:center;
+  font-size:15px; font-weight:600;
+}
+.faq-a { font-size:13px; color:var(--muted2); margin-top:14px; line-height:1.7; display:none; }
+.faq-item.open .faq-a { display:block; }
+.faq-plus { font-size:20px; color:var(--muted); transition:transform .2s; flex-shrink:0; }
+.faq-item.open .faq-plus { transform:rotate(45deg); color:var(--accent); }
+
+/* ── FOOTER CTA ── */
+.footer-cta {
+  position:relative; z-index:1; text-align:center;
+  padding:100px clamp(1rem,5vw,5rem);
+  border-top:1px solid var(--border);
+}
+.footer-cta h2 { margin-bottom:16px; }
+.footer-cta p { color:var(--muted2); font-size:16px; margin:0 auto 40px; max-width:460px; }
+
+/* ── FOOTER ── */
+footer {
+  position:relative; z-index:1;
+  border-top:1px solid var(--border);
+  padding:28px clamp(1rem,5vw,5rem);
+  display:flex; justify-content:space-between; align-items:center;
+  font-family:var(--mono); font-size:11px; color:var(--muted);
+  flex-wrap:wrap; gap:12px;
+}
+footer a { color:var(--muted2); text-decoration:none; }
+footer a:hover { color:var(--text); }
+
+/* ── RESPONSIVE ── */
+@media(max-width:768px) {
+  .stats-band { grid-template-columns:repeat(2,1fr); }
+  .features-grid { grid-template-columns:1fr; }
+  .decision-showcase { grid-template-columns:1fr; }
+  .nasa-section { grid-template-columns:1fr; }
+  .pipeline { flex-direction:column; }
+  .pipe-step { border-right:none; border-bottom:1px solid var(--border); }
+  .pipe-step::after { content:'↓'; right:auto; left:50%; bottom:-14px; top:auto; transform:translateX(-50%); }
+  .pipe-step:last-child { border:none; }
+  .pricing-grid { grid-template-columns:1fr; }
+  .nav-links { display:none; }
+}
 </style>
 </head>
 <body>
 
-<button id="mob-btn" onclick="document.getElementById('sb').classList.toggle('open')">☰</button>
+<div class="blob blob-1"></div>
+<div class="blob blob-2"></div>
 
-<!-- SIDEBAR -->
-<aside id="sb">
-  <div class="logo">
-    <div class="logo-ic">💊</div>
-    <div><h2>PharmaGest</h2><small>Gestion Pharmacie</small></div>
+<!-- ══ NAV ══ -->
+<nav>
+  <div class="nav-logo"><span class="shield">🛡️</span> TURBINE GUARDIAN</div>
+  <ul class="nav-links">
+    <li><a href="#how">How It Works</a></li>
+    <li><a href="#features">Features</a></li>
+    <li><a href="#nasa">NASA Data</a></li>
+    <li><a href="#pricing">Pricing</a></li>
+    <li><a href="#faq">FAQ</a></li>
+  </ul>
+  <a href="#download" class="nav-cta">⬇ Download Free</a>
+</nav>
+
+<!-- ══ HERO ══ -->
+<section class="hero">
+  <div class="hero-eyebrow">NASA C-MAPSS · GE MS5002C · Real Industrial Data</div>
+  <h1>
+    <span class="line1">FAULT DETECTED.</span>
+    <span class="line2">DECISION MADE.</span>
+  </h1>
+  <p class="hero-sub">
+    AI-powered sensor fault detection for industrial gas turbines. Instant plain-text decisions. XAI explanations. Maintenance recommendations. Real NASA telemetry data.
+  </p>
+  <div class="hero-actions">
+    <a href="#download" class="btn-primary">⬇ Download v6.3 Free</a>
+    <a href="#how" class="btn-ghost">▶ See How It Works</a>
   </div>
-  <nav>
-    <button class="ni active" onclick="goTo('dash',this)"><span class="ic">🏠</span>Tableau de bord</button>
-    <button class="ni" onclick="goTo('stock',this)"><span class="ic">📦</span>Stock Médicaments</button>
-    <button class="ni" onclick="goTo('pos',this)"><span class="ic">🛒</span>Point de Vente</button>
-    <button class="ni" onclick="goTo('clients',this)"><span class="ic">👥</span>Clients & Dettes</button>
-    <button class="ni" onclick="goTo('histo',this)"><span class="ic">🧾</span>Historique Ventes</button>
-    <button class="ni" id="nav-alertes" onclick="goTo('alertes',this)">
-      <span class="ic">🔔</span>Alertes
-      <span class="nbadge" id="alert-badge">0</span>
-    </button>
-    <button class="ni" onclick="goTo('rapports',this)"><span class="ic">📊</span>Rapports</button>
-  </nav>
-  <div class="sf">
-    <div class="sf-date" id="sf-date"></div>
-    <div class="sf-btns">
-      <button class="sf-btn export" onclick="exportData('stock')">📥 Stock</button>
-      <button class="sf-btn export" onclick="exportData('ventes')">📥 Ventes</button>
-      <button class="sf-btn logout" onclick="location.href='/logout'">🚪 Exit</button>
+
+  <div class="terminal reveal">
+    <div class="term-bar">
+      <div class="dot dot-r"></div><div class="dot dot-y"></div><div class="dot dot-g"></div>
+      <span class="term-title">turbine_guardian_v6.3 — real NASA FD001 engine #47</span>
     </div>
-  </div>
-</aside>
-
-<!-- MAIN -->
-<main id="main">
-<div id="toast"></div>
-
-<!-- ═══ DASHBOARD ═══ -->
-<div class="page active" id="page-dash">
-  <h1>🏠 Tableau de bord</h1>
-  <div class="stat-grid" id="stat-grid"></div>
-  <div class="chart-wrap">
-    <h2 style="margin-bottom:1rem;font-size:.92rem">📈 Ventes & Bénéfices — 7 derniers jours</h2>
-    <canvas id="chart-sales" height="90"></canvas>
-  </div>
-  <div id="dash-alerts"></div>
-  <div class="card">
-    <div class="ch"><h2>🧾 Dernières ventes</h2></div>
-    <div style="overflow-x:auto">
-      <table><thead><tr><th>Date</th><th>Heure</th><th>Client</th><th>Total</th><th>Bénéfice</th><th>Statut</th></tr></thead>
-      <tbody id="tb-recent"></tbody></table>
-    </div>
-  </div>
-</div>
-
-<!-- ═══ STOCK ═══ -->
-<div class="page" id="page-stock">
-  <h1>📦 Gestion du Stock</h1>
-  <div class="card">
-    <div class="ch">
-      <div class="sw"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-        <input id="sq" placeholder="Recherche par nom ou code-barres…" oninput="loadStock()"/></div>
-      <div style="display:flex;gap:7px;flex-wrap:wrap">
-        <select id="scat" onchange="loadStock()" style="width:auto">
-          <option value="">Toutes catégories</option>
-          {% for c in categories %}<option>{{c}}</option>{% endfor %}
-        </select>
-        <button class="btn btn-p btn-sm" onclick="openMedModal()">➕ Ajouter</button>
+    <div class="term-body">
+      <div class="tl">
+        <span class="tm">🔍 </span><span class="tb">Checking data quality... </span><span class="tg">✓ All checks passed</span>
+      </div>
+      <div class="tl">
+        <span class="tm">🧠 </span><span class="tb">Training Autoencoder (ACPNL) on 70% normal data... </span><span class="tg">✓ loss=0.00184</span>
+      </div>
+      <div class="tl">
+        <span class="tm">🔍 </span><span class="tb">Localizing fault... </span><span class="tg">✓ 7/7 sensors analyzed</span>
+      </div>
+      <div class="tl" style="margin-top:10px;">
+        <span class="tr">🚨 FAULT DETECTED</span>
+      </div>
+      <div class="tl">
+        <span class="tm">   Location:    </span><span class="ty">Nc (Core Speed) — sensor_9</span>
+      </div>
+      <div class="tl">
+        <span class="tm">   Severity:    </span><span class="tr">HIGH (82.4%)</span>
+      </div>
+      <div class="tl">
+        <span class="tm">   Fault Type:  </span><span class="tb">📈 Drift (Progressive)</span>
+      </div>
+      <div class="tl">
+        <span class="tm">   Confidence:  </span><span class="tg">91.3%</span>
+      </div>
+      <div class="tl">
+        <span class="tm">   RUL:         </span><span class="ty">14 measurement steps remaining</span>
+      </div>
+      <div class="tl" style="margin-top:6px;">
+        <span class="tm">⚡ Action: </span><span class="tr">Inspect sensor element for fouling. Schedule maintenance within 24h.</span>
+      </div>
+      <div class="tl">
+        <span class="tm">   F1-Score: </span><span class="tg">0.887</span><span class="tm"> · ROC-AUC: </span><span class="tg">0.942</span><span class="tm"> · True RUL error: </span><span class="tg">|12 steps|</span>
       </div>
     </div>
-    <div style="overflow-x:auto">
-      <table><thead><tr><th>Médicament</th><th>Catégorie</th><th>Qté</th><th>P.Achat</th><th>P.Vente</th><th>Marge</th><th>Expiration</th><th>Statut</th><th>Actions</th></tr></thead>
-      <tbody id="tb-stock"></tbody></table>
-    </div>
   </div>
+</section>
+
+<!-- ══ STATS ══ -->
+<div class="stats-band">
+  <div class="stat reveal"><div class="stat-val">100</div><div class="stat-lbl">Real NASA engines</div></div>
+  <div class="stat reveal"><div class="stat-val">21</div><div class="stat-lbl">Sensors per engine</div></div>
+  <div class="stat reveal"><div class="stat-val">3</div><div class="stat-lbl">Detection algorithms</div></div>
+  <div class="stat reveal"><div class="stat-val">6</div><div class="stat-lbl">Output languages</div></div>
 </div>
 
-<!-- ═══ POS ═══ -->
-<div class="page" id="page-pos">
-  <h1>🛒 Point de Vente</h1>
-  <div class="pos-layout">
+<!-- ══ DECISION DEMO ══ -->
+<section id="features">
+  <div class="section-tag">Core Output</div>
+  <h2>What a factory worker needs.<br>Not a chart — a <span style="color:var(--accent)">decision.</span></h2>
+  <p class="section-sub">Most systems give you plots. Turbine Guardian gives you an action. Plain text. In seconds.</p>
+  <div class="decision-showcase">
+    <div class="decision-card fault reveal">
+      <div class="dc-label">FAULT SCENARIO · ENGINE #47</div>
+      <div class="dc-status" style="color:var(--accent2)">🚨 FAULT DETECTED</div>
+      <div class="dc-row"><span class="dc-key">Location</span><span class="dc-val" style="color:var(--accent2)">Sensor S3 · Outlet Pressure</span></div>
+      <div class="dc-row"><span class="dc-key">Severity</span><span class="dc-val" style="color:var(--accent2)">HIGH</span></div>
+      <div class="dc-row"><span class="dc-key">Confidence</span><span class="dc-val" style="color:var(--accent3)">91.3%</span></div>
+      <div class="dc-row"><span class="dc-key">Fault Type</span><span class="dc-val">📈 Drift</span></div>
+      <div class="dc-row"><span class="dc-key">System Health</span><span class="dc-val" style="color:var(--accent2)">42% ↓ Degrading</span></div>
+      <div class="dc-row"><span class="dc-key">RUL Remaining</span><span class="dc-val" style="color:var(--gold)">14 steps</span></div>
+      <div class="dc-action">⚡ Inspect sensor for fouling or mechanical wear. Schedule maintenance within 24 hours.</div>
+    </div>
+    <div class="decision-card normal reveal">
+      <div class="dc-label">NORMAL SCENARIO · ENGINE #12</div>
+      <div class="dc-status" style="color:var(--accent3)">✅ SYSTEM NORMAL</div>
+      <div class="dc-row"><span class="dc-key">All Sensors</span><span class="dc-val" style="color:var(--accent3)">Within bounds</span></div>
+      <div class="dc-row"><span class="dc-key">Detection Rate</span><span class="dc-val">2.1%</span></div>
+      <div class="dc-row"><span class="dc-key">Confidence</span><span class="dc-val" style="color:var(--accent3)">99.0%</span></div>
+      <div class="dc-row"><span class="dc-key">Fault Type</span><span class="dc-val" style="color:var(--muted)">—</span></div>
+      <div class="dc-row"><span class="dc-key">System Health</span><span class="dc-val" style="color:var(--accent3)">94% ↑ Good</span></div>
+      <div class="dc-row"><span class="dc-key">F1-Score</span><span class="dc-val" style="color:var(--accent3)">0.912</span></div>
+      <div class="dc-action">✅ Continue standard monitoring. No action required.</div>
+    </div>
+  </div>
+</section>
+
+<!-- ══ HOW IT WORKS ══ -->
+<section id="how" style="padding-top:0;">
+  <div class="section-tag">How It Works</div>
+  <h2>One button.<br>Full <span style="color:var(--accent)">pipeline.</span></h2>
+  <p class="section-sub">Press Run — everything executes automatically in sequence.</p>
+  <div class="pipeline reveal">
+    <div class="pipe-step">
+      <div class="ps-num">01</div>
+      <div class="ps-icon">🔍</div>
+      <div class="ps-title">Data Quality</div>
+      <div class="ps-desc">Missing values, outliers, flat signals — auto-detected and flagged</div>
+    </div>
+    <div class="pipe-step">
+      <div class="ps-num">02</div>
+      <div class="ps-icon">🧠</div>
+      <div class="ps-title">Model Training</div>
+      <div class="ps-desc">Autoencoder trained on genuine 70/30 split — no data leakage</div>
+    </div>
+    <div class="pipe-step">
+      <div class="ps-num">03</div>
+      <div class="ps-icon">🚨</div>
+      <div class="ps-title">Fault Detection</div>
+      <div class="ps-desc">SPE + EWMA with F1/ROC scored on held-out test data</div>
+    </div>
+    <div class="pipe-step">
+      <div class="ps-num">04</div>
+      <div class="ps-icon">🔍</div>
+      <div class="ps-title">Localization</div>
+      <div class="ps-desc">Leave-one-out algorithm identifies which sensor is faulty</div>
+    </div>
+    <div class="pipe-step">
+      <div class="ps-num">05</div>
+      <div class="ps-icon">💡</div>
+      <div class="ps-title">XAI + Decision</div>
+      <div class="ps-desc">Plain-text fault decision, cause, and maintenance recommendation</div>
+    </div>
+    <div class="pipe-step">
+      <div class="ps-num">06</div>
+      <div class="ps-icon">📉</div>
+      <div class="ps-title">RUL Estimate</div>
+      <div class="ps-desc">Remaining useful life vs NASA's published ground truth</div>
+    </div>
+  </div>
+</section>
+
+<!-- ══ FEATURES ══ -->
+<section style="padding-top:0;">
+  <div class="section-tag">Features</div>
+  <h2>Built for <span style="color:var(--accent)">engineers.</span><br>Readable by anyone.</h2>
+  <p class="section-sub">Expert mode for deep analysis. Simple mode for the factory floor.</p>
+  <div class="features-grid">
+    <div class="feature-card reveal">
+      <div class="fc-icon">🛰️</div>
+      <div class="fc-title">Real NASA C-MAPSS Data</div>
+      <div class="fc-desc">Loads actual FD001 turbofan engine telemetry — 100 real engines, genuine run-to-failure trajectories. Not synthetic.</div>
+      <span class="fc-tag">GENUINE TELEMETRY</span>
+    </div>
+    <div class="feature-card reveal">
+      <div class="fc-icon">🧠</div>
+      <div class="fc-title">Hand-Built Autoencoder</div>
+      <div class="fc-desc">5-layer autoencoder built from pure NumPy — manual backprop and Adam optimizer. No TensorFlow, no black boxes.</div>
+      <span class="fc-tag">PURE NUMPY</span>
+    </div>
+    <div class="feature-card reveal">
+      <div class="fc-icon">📐</div>
+      <div class="fc-title">Scientific Evaluation</div>
+      <div class="fc-desc">Genuine 70/30 train/test split. F1-Score, Precision, Recall, ROC-AUC computed on data the model never saw.</div>
+      <span class="fc-tag">NO DATA LEAKAGE</span>
+    </div>
+    <div class="feature-card reveal">
+      <div class="fc-icon">📉</div>
+      <div class="fc-title">RUL Prediction</div>
+      <div class="fc-desc">Piecewise-linear degradation model (Heimes 2008 / Saxena et al. 2008). Compared directly against NASA's published true RUL.</div>
+      <span class="fc-tag">C-MAPSS STANDARD</span>
+    </div>
+    <div class="feature-card reveal">
+      <div class="fc-icon">🌐</div>
+      <div class="fc-title">Bilingual AR / EN</div>
+      <div class="fc-desc">Full Arabic and English interface — RTL support, bilingual PDF reports, bilingual turbine catalog with SVG diagrams.</div>
+      <span class="fc-tag">عربي / ENGLISH</span>
+    </div>
+    <div class="feature-card reveal">
+      <div class="fc-icon">🔌</div>
+      <div class="fc-title">JSON / CSV / PDF Export</div>
+      <div class="fc-desc">Machine-readable JSON output for SCADA/DCS integration. CSV sensor health table. Professional PDF maintenance report.</div>
+      <span class="fc-tag">API-READY OUTPUT</span>
+    </div>
+  </div>
+</section>
+
+<!-- ══ NASA SECTION ══ -->
+<section id="nasa" style="padding-top:0;">
+  <div class="section-tag">Data Source</div>
+  <h2>Real NASA data.<br>Not <span style="color:var(--accent)">simulated.</span></h2>
+  <p class="section-sub">The bundled dataset is the actual NASA FD001 file — not statistics or approximations.</p>
+  <div class="nasa-section reveal">
     <div>
-      <div class="sw" style="margin-bottom:.9rem">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-        <input id="posq" placeholder="Recherche médicament ou code-barres…" oninput="renderPOS()"/>
-      </div>
-      <div class="med-grid sc" id="pos-grid"></div>
+      <span class="nasa-badge-big">🛰️ NASA CMAPSS FD001 — GENUINE TELEMETRY</span>
+      <h3 style="font-size:1.6rem;font-weight:700;margin-bottom:14px;">100 real turbofan engines.<br>26 sensors. Genuine degradation.</h3>
+      <p style="color:var(--muted2);font-size:14px;line-height:1.7;margin-bottom:20px;">
+        A. Saxena & K. Goebel (2008). <em>"Turbofan Engine Degradation Simulation Data Set."</em> NASA Ames Prognostics Data Repository. Used directly — the actual <code style="background:rgba(0,229,255,0.1);padding:1px 6px;border-radius:3px;font-size:12px;">train_FD001.txt</code> file, not a calibrated approximation.
+      </p>
+      <p style="color:var(--muted);font-size:12px;font-family:var(--mono);">Dataset: FD001 · Single fault mode (HPC degradation) · Sea-level operation · 100 training units · 100 test units + ground-truth RUL</p>
     </div>
-    <div class="cart-box">
-      <h2 style="margin-bottom:.8rem">🛒 Panier</h2>
-      <div id="cart-items" style="flex:1;overflow-y:auto"></div>
-      <div id="cart-empty" style="flex:1;display:flex;align-items:center;justify-content:center;
-        color:var(--mut);text-align:center;flex-direction:column;gap:.5rem">
-        <span style="font-size:2.5rem">🛒</span>
-        <span style="font-size:.83rem">Cliquez sur un médicament</span>
-      </div>
-      <div id="cart-foot" style="display:none">
-        <div class="fld" style="margin-top:.8rem">
-          <label>Client (optionnel)</label>
-          <select id="cart-client"><option value="">— Anonyme —</option></select>
-        </div>
-        <div class="g2">
-          <div class="fld"><label>Remise (%)</label>
-            <input type="number" id="cart-disc" value="0" min="0" max="100" oninput="calcTotal()"/></div>
-          <div class="fld"><label>Mode</label>
-            <select id="cart-mode"><option value="cash">💵 Comptant</option><option value="credit">📋 Crédit</option></select>
-          </div>
-        </div>
-        <div class="total-box" id="total-box"></div>
-        <button class="btn btn-s" style="width:100%;justify-content:center" onclick="completeSale()">✅ Finaliser la vente</button>
-        <button class="btn btn-g" style="width:100%;justify-content:center;margin-top:6px" onclick="clearCart()">🗑 Vider le panier</button>
-      </div>
+    <div class="nasa-specs">
+      <div class="nasa-spec-row"><span class="nsr-key">Engine Units</span><span class="nsr-val">100 train + 100 test</span></div>
+      <div class="nasa-spec-row"><span class="nsr-key">Sensors per Unit</span><span class="nsr-val">21 (7 used, 6 constant excluded)</span></div>
+      <div class="nasa-spec-row"><span class="nsr-key">Fault Mode</span><span class="nsr-val">HPC Degradation</span></div>
+      <div class="nasa-spec-row"><span class="nsr-key">Operating Conditions</span><span class="nsr-val">Single (sea level)</span></div>
+      <div class="nasa-spec-row"><span class="nsr-key">True RUL Available</span><span class="nsr-val" style="color:var(--accent3)">✓ Yes — RUL_FD001.txt</span></div>
+      <div class="nasa-spec-row"><span class="nsr-key">MS5002C Turbine Specs</span><span class="nsr-val">30.6 MW · 4670 RPM · Algeria</span></div>
     </div>
   </div>
-</div>
+</section>
 
-<!-- ═══ CLIENTS ═══ -->
-<div class="page" id="page-clients">
-  <h1>👥 Clients & Dettes</h1>
-  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem;flex-wrap:wrap;gap:.7rem">
-    <div class="sw" style="max-width:280px">
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-      <input id="csq" placeholder="Recherche client…" oninput="renderClients()"/>
+<!-- ══ PRICING ══ -->
+<section id="pricing">
+  <div class="section-tag">Pricing</div>
+  <h2 style="text-align:center;">Simple.<br><span style="color:var(--accent)">Free to start.</span></h2>
+  <p class="section-sub" style="text-align:center;margin-left:auto;margin-right:auto;">Run on your own machine. No subscription. No account.</p>
+  <div class="pricing-grid">
+    <div class="price-card reveal">
+      <div class="price-name">Open Source</div>
+      <div class="price-tagline">Run it yourself, modify it, learn from it</div>
+      <div class="price-amount"><span>$</span>0</div>
+      <div class="price-was">&nbsp;</div>
+      <ul class="price-list">
+        <li><span class="ck">✓</span>Full source code — 2,412 lines</li>
+        <li><span class="ck">✓</span>NASA FD001 data bundled</li>
+        <li><span class="ck">✓</span>All 3 algorithms (PCA, Kernel PCA, Autoencoder)</li>
+        <li><span class="ck">✓</span>Bilingual AR/EN interface</li>
+        <li><span class="nx">—</span><span style="color:var(--muted)">No commercial support</span></li>
+        <li><span class="nx">—</span><span style="color:var(--muted)">No custom deployment help</span></li>
+      </ul>
+      <a href="#download" class="btn-ghost" style="width:100%;justify-content:center;display:flex;">⬇ Download Free</a>
     </div>
-    <button class="btn btn-p btn-sm" onclick="openClientModal()">➕ Nouveau client</button>
-  </div>
-  <div class="cg" id="client-grid"></div>
-</div>
-
-<!-- ═══ HISTORIQUE ═══ -->
-<div class="page" id="page-histo">
-  <h1>🧾 Historique des Ventes</h1>
-  <div style="display:flex;gap:.7rem;margin-bottom:1rem;flex-wrap:wrap">
-    <input type="date" id="histo-from" style="width:auto"/>
-    <input type="date" id="histo-to" style="width:auto"/>
-    <button class="btn btn-p btn-sm" onclick="loadHisto()">🔍 Filtrer</button>
-    <button class="btn btn-g btn-sm" onclick="clearHistoFilter()">✕ Tout</button>
-  </div>
-  <div class="card" style="overflow-x:auto">
-    <table><thead><tr><th>#</th><th>Date</th><th>Heure</th><th>Client</th><th>Articles</th><th>Remise</th><th>Total</th><th>Bénéfice</th><th>Statut</th></tr></thead>
-    <tbody id="tb-histo"></tbody></table>
-  </div>
-</div>
-
-<!-- ═══ ALERTES ═══ -->
-<div class="page" id="page-alertes">
-  <h1>🔔 Alertes & Notifications</h1>
-  <div id="alertes-content"></div>
-</div>
-
-<!-- ═══ RAPPORTS ═══ -->
-<div class="page" id="page-rapports">
-  <h1>📊 Rapports & Statistiques</h1>
-  <div class="stat-grid" id="rpt-stats"></div>
-  <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.2rem">
-    <div class="card">
-      <div class="ch"><h2>🏆 Top médicaments vendus</h2></div>
-      <div style="padding:1rem" id="top-meds"></div>
-    </div>
-    <div class="card">
-      <div class="ch"><h2>💰 Valeur stock par catégorie</h2></div>
-      <div style="padding:1rem" id="stock-val"></div>
+    <div class="price-card featured reveal">
+      <div class="price-badge">🔥 CONSULTING DEAL</div>
+      <div class="price-name">Custom Deployment</div>
+      <div class="price-tagline">Connect to your real plant data</div>
+      <div class="price-amount"><span>$</span>500</div>
+      <div class="price-was">From $500 depending on scope</div>
+      <ul class="price-list">
+        <li><span class="ck">✓</span>Everything in Open Source</li>
+        <li><span class="ck">✓</span>OPC-UA / Modbus live data connection</li>
+        <li><span class="ck">✓</span>Custom sensor count (not limited to 7)</li>
+        <li><span class="ck">✓</span>FD002–FD004 multi-condition support</li>
+        <li><span class="ck">✓</span>On-site deployment support</li>
+        <li><span class="ck">✓</span>Custom PDF report in your branding</li>
+      </ul>
+      <a href="mailto:contact@turbine-guardian.com" class="btn-primary" style="width:100%;justify-content:center;">📧 Contact for Quote</a>
     </div>
   </div>
-  <div class="card" style="margin-top:1.3rem">
-    <div class="ch"><h2>💳 Clients avec dettes</h2></div>
-    <div style="overflow-x:auto"><table>
-      <thead><tr><th>Client</th><th>Téléphone</th><th>Montant dû</th></tr></thead>
-      <tbody id="debt-tbl"></tbody>
-    </table></div>
-  </div>
-</div>
+</section>
 
-</main><!-- end main -->
-
-<!-- ═══ MODAL MÉDICAMENT ═══ -->
-<div class="ov" id="ov-med">
-  <div class="modal modal-w">
-    <div class="mh"><h3 id="med-m-title">Ajouter médicament</h3>
-      <button class="btn btn-g btn-ic btn-sm" onclick="closeOv('ov-med')">✕</button></div>
-    <div class="mb">
-      <input type="hidden" id="med-id"/>
-      <div class="g2">
-        <div class="fld"><label>Nom *</label><input id="m-nom" placeholder="Amoxicilline 500mg"/></div>
-        <div class="fld"><label>Catégorie</label>
-          <select id="m-cat">{% for c in categories %}<option>{{c}}</option>{% endfor %}</select></div>
-        <div class="fld"><label>Quantité *</label><input type="number" id="m-qty" placeholder="100"/></div>
-        <div class="fld"><label>Stock minimum</label><input type="number" id="m-min" placeholder="20"/></div>
-        <div class="fld"><label>Prix d'achat (DA)</label><input type="number" id="m-buy" placeholder="100"/></div>
-        <div class="fld"><label>Prix de vente (DA) *</label><input type="number" id="m-sell" placeholder="150"/></div>
-        <div class="fld"><label>Date d'expiration *</label><input type="date" id="m-exp"/></div>
-        <div class="fld"><label>Fournisseur</label><input id="m-sup" placeholder="Saidal"/></div>
-        <div class="fld"><label>Code-barres</label><input id="m-bar" placeholder="691234…"/></div>
-      </div>
-      <div class="mf">
-        <button class="btn btn-g" onclick="closeOv('ov-med')">Annuler</button>
-        <button class="btn btn-p" onclick="saveMed()">✅ Enregistrer</button>
-      </div>
+<!-- ══ FAQ ══ -->
+<section id="faq">
+  <div class="section-tag">FAQ</div>
+  <h2 style="text-align:center;">Questions <span style="color:var(--accent)">answered.</span></h2>
+  <br>
+  <div class="faq reveal">
+    <div class="faq-item" onclick="toggleFaq(this)">
+      <div class="faq-q">Is this real NASA data or a simulation? <span class="faq-plus">+</span></div>
+      <div class="faq-a">The bundled <code>nasa_data/</code> folder contains the actual <code>train_FD001.txt</code>, <code>test_FD001.txt</code>, and <code>RUL_FD001.txt</code> files from NASA's official Prognostics Data Repository (Saxena & Goebel, 2008). These are real turbofan engine telemetry recordings — not synthetic data. A synthetic simulation mode also exists for fast experimentation, clearly labeled as such in the UI.</div>
+    </div>
+    <div class="faq-item" onclick="toggleFaq(this)">
+      <div class="faq-q">Can I connect it to my real plant SCADA system? <span class="faq-plus">+</span></div>
+      <div class="faq-a">Not in the open-source version — it reads CSV/Excel files or the bundled NASA data. The consulting package adds OPC-UA and Modbus live data connectors to link directly to your PLC or DCS historian.</div>
+    </div>
+    <div class="faq-item" onclick="toggleFaq(this)">
+      <div class="faq-q">Is this scientifically valid for a research paper or master's thesis? <span class="faq-plus">+</span></div>
+      <div class="faq-a">The evaluation is methodologically sound: genuine 70/30 train/test split with no data leakage, F1/Precision/Recall/ROC-AUC on held-out data, RUL comparison against NASA's published ground truth. The RUL model uses the standard piecewise-linear approach from the C-MAPSS literature (Heimes 2008). For a journal submission you would also need multi-unit cross-validation across all 100 FD001 test engines — that's the next roadmap item.</div>
+    </div>
+    <div class="faq-item" onclick="toggleFaq(this)">
+      <div class="faq-q">What Python version and hardware do I need? <span class="faq-plus">+</span></div>
+      <div class="faq-a">Python 3.9–3.11 (not 3.12+ yet). Works on any x86 Windows/Mac/Linux machine. The Autoencoder training on 1000 samples takes about 30–60 seconds on a regular laptop CPU — no GPU required. The fault localization step (leave-one-out) takes 2–5 minutes; reduce epochs for faster iteration.</div>
+    </div>
+    <div class="faq-item" onclick="toggleFaq(this)">
+      <div class="faq-q">Why Streamlit instead of a web app? <span class="faq-plus">+</span></div>
+      <div class="faq-a">Streamlit makes the full ML pipeline interactive without a separate frontend/backend split — ideal for a research tool you run locally on sensitive industrial data that never leaves your machine. A cloud SaaS version is possible in a future version.</div>
     </div>
   </div>
+</section>
+
+<!-- ══ FOOTER CTA ══ -->
+<div class="footer-cta reveal" id="download">
+  <h2>Ready to detect your first fault?</h2>
+  <p>Download, run one command, and see a real NASA engine's degradation detected in minutes.</p>
+  <div style="display:flex;gap:14px;justify-content:center;flex-wrap:wrap;">
+    <a href="https://github.com" class="btn-primary">⬇ Download v6.3 — Free</a>
+    <a href="#faq" class="btn-ghost">❓ Read the FAQ first</a>
+  </div>
+  <p style="margin-top:20px;font-family:var(--mono);font-size:11px;color:var(--muted);">
+    pip install streamlit numpy pandas matplotlib scikit-learn scipy reportlab openpyxl<br>
+    streamlit run turbine_guardian_v6.3.py
+  </p>
 </div>
 
-<!-- ═══ MODAL CLIENT ═══ -->
-<div class="ov" id="ov-client">
-  <div class="modal">
-    <div class="mh"><h3 id="cl-m-title">Nouveau client</h3>
-      <button class="btn btn-g btn-ic btn-sm" onclick="closeOv('ov-client')">✕</button></div>
-    <div class="mb">
-      <input type="hidden" id="cl-id"/>
-      <div class="fld"><label>Nom complet *</label><input id="cl-nom" placeholder="Mohammed Boualam"/></div>
-      <div class="fld"><label>Téléphone</label><input id="cl-phone" placeholder="0550xxxxxx"/></div>
-      <div class="fld"><label>Adresse</label><input id="cl-addr" placeholder="Rue, Quartier, Ville"/></div>
-      <div class="fld"><label>Notes médicales</label><input id="cl-notes" placeholder="Diabétique, hypertension…"/></div>
-      <div class="mf">
-        <button class="btn btn-g" onclick="closeOv('ov-client')">Annuler</button>
-        <button class="btn btn-p" onclick="saveClient()">✅ Enregistrer</button>
-      </div>
-    </div>
-  </div>
-</div>
-
-<!-- ═══ MODAL DETTE ═══ -->
-<div class="ov" id="ov-debt">
-  <div class="modal">
-    <div class="mh"><h3>💳 Remboursement</h3>
-      <button class="btn btn-g btn-ic btn-sm" onclick="closeOv('ov-debt')">✕</button></div>
-    <div class="mb">
-      <input type="hidden" id="debt-cid"/>
-      <div style="background:#0b0f1a;border-radius:9px;padding:1rem;margin-bottom:1rem">
-        <div style="font-size:.78rem;color:var(--mut)">Client</div>
-        <div id="debt-cname" style="font-weight:800;font-size:1rem"></div>
-        <div id="debt-amt" style="color:var(--red);font-weight:800;font-size:1.2rem;margin-top:3px"></div>
-      </div>
-      <div class="fld"><label>Montant payé (DA)</label><input type="number" id="debt-pay"/></div>
-      <div class="fld"><label>Note (optionnel)</label><input id="debt-note" placeholder="Paiement partiel…"/></div>
-      <div class="mf">
-        <button class="btn btn-g" onclick="closeOv('ov-debt')">Annuler</button>
-        <button class="btn btn-s" onclick="payDebt()">✅ Confirmer</button>
-      </div>
-    </div>
-  </div>
-</div>
+<!-- ══ FOOTER ══ -->
+<footer>
+  <div>🛡️ <strong>TURBINE GUARDIAN v6.3</strong> — Industrial Fault Detection · NASA C-MAPSS · Autoencoder ACPNL</div>
+  <div>No tracking · No ads · Open source</div>
+</footer>
 
 <script>
-// ─── STATE ────────────────────────────────────────────────────────────────────
-let allMeds=[], allClients=[], cart=[], salesChart=null;
+function toggleFaq(el) { el.classList.toggle('open'); }
 
-// ─── UTILS ────────────────────────────────────────────────────────────────────
-const $ = id => document.getElementById(id);
-const fmt = n => Number(n||0).toLocaleString("fr-DZ",{minimumFractionDigits:0});
-function toast(msg,ok=true){
-  const t=$("toast"); t.textContent=msg;
-  t.className="show "+(ok?"ok":"err");
-  setTimeout(()=>t.className="",3000);
-}
-function badge(txt,col){return`<span class="bdg" style="background:${col}22;color:${col}">${txt}</span>`}
-function openOv(id){$(id).classList.add("open")}
-function closeOv(id){$(id).classList.remove("open")}
-function goTo(page,btn){
-  document.querySelectorAll(".page").forEach(p=>p.classList.remove("active"));
-  document.querySelectorAll(".ni").forEach(n=>n.classList.remove("active"));
-  $("page-"+page).classList.add("active");
-  if(btn) btn.classList.add("active");
-  document.getElementById("sb").classList.remove("open");
-  if(page==="dash")    loadDash();
-  if(page==="stock")   loadStock();
-  if(page==="pos")     {loadPOS();loadClientsForCart();}
-  if(page==="clients") loadAllClients();
-  if(page==="histo")   loadHisto();
-  if(page==="alertes") loadAlertes();
-  if(page==="rapports")loadRapports();
-}
-async function api(url,method="GET",body){
-  const opts={method,headers:{"Content-Type":"application/json"}};
-  if(body) opts.body=JSON.stringify(body);
-  const r=await fetch(url,opts);
-  return r.json();
-}
-function exportData(type){window.open("/api/export/"+type);}
-
-// ─── DATE ─────────────────────────────────────────────────────────────────────
-$("sf-date").textContent=new Date().toLocaleDateString("fr-DZ",
-  {weekday:"long",day:"numeric",month:"long",year:"numeric"});
-
-// ─── DASHBOARD ────────────────────────────────────────────────────────────────
-async function loadDash(){
-  const d=await api("/api/dashboard");
-  $("stat-grid").innerHTML=
-    sc("💰","Ventes du jour",fmt(d.today_rev)+" DA",d.today_count+" vente(s)","#3b82f6")+
-    sc("📈","Bénéfice du jour",fmt(d.today_profit)+" DA","Net","#10b981")+
-    sc("💳","Dettes clients",fmt(d.total_debt)+" DA","À recouvrer","#f59e0b")+
-    sc("🗓","Ventes du mois",fmt(d.month_rev)+" DA","Ce mois","#6366f1")+
-    sc("📦","Total produits",d.total_meds,d.total_units+" unités","#10b981")+
-    sc("⚠️","Stock faible",d.low_stock,"À réapprovisionner","#ef4444")+
-    sc("⛔","Expirés",d.expired,"À retirer","#ef4444")+
-    sc("⏰","Expirent bientôt",d.soon,"< 60 jours","#f59e0b");
-
-  // Chart
-  const ctx=document.getElementById("chart-sales").getContext("2d");
-  if(salesChart) salesChart.destroy();
-  salesChart=new Chart(ctx,{
-    type:"bar",
-    data:{
-      labels:d.chart.map(x=>x.date),
-      datasets:[
-        {label:"Ventes (DA)",data:d.chart.map(x=>x.total),
-         backgroundColor:"rgba(59,130,246,.7)",borderRadius:6,borderSkipped:false},
-        {label:"Bénéfice (DA)",data:d.chart.map(x=>x.benefice),
-         backgroundColor:"rgba(16,185,129,.7)",borderRadius:6,borderSkipped:false}
-      ]
-    },
-    options:{responsive:true,plugins:{legend:{labels:{color:"#94a3b8",font:{size:11}}}},
-      scales:{x:{ticks:{color:"#64748b"},grid:{color:"#1e2d4520"}},
-               y:{ticks:{color:"#64748b"},grid:{color:"#1e2d4540"}}}}
-  });
-
-  // Alerts
-  let ah="";
-  if(d.expired.length>0||d.low_stock_list.length>0){
-    ah=`<div class="asec danger" style="margin-bottom:1.2rem">
-      <div style="font-weight:700;color:#ef4444;margin-bottom:.8rem">⚠️ Alertes urgentes</div>
-      <div style="display:flex;flex-wrap:wrap;gap:7px">
-        ${d.expired_list.map(m=>`${badge("⛔ "+m.nom+" — Expiré","#ef4444")}`).join("")}
-        ${d.low_stock_list.map(m=>`${badge("⚠ "+m.nom+" — "+m.quantite+" unités","#f59e0b")}`).join("")}
-      </div></div>`;
-  }
-  $("dash-alerts").innerHTML=ah;
-
-  // Recent sales
-  const tb=$("tb-recent");
-  if(!d.recent_sales.length){tb.innerHTML=`<tr><td colspan="6" style="text-align:center;color:var(--mut);padding:2rem">Aucune vente</td></tr>`;return;}
-  tb.innerHTML=d.recent_sales.map(v=>`<tr>
-    <td style="color:var(--mut)">${v.date}</td><td style="color:var(--mut)">${v.heure}</td>
-    <td>${v.client_nom}</td>
-    <td style="color:var(--grn);font-weight:700">${fmt(v.total)} DA</td>
-    <td style="color:#6366f1">${fmt(v.benefice)} DA</td>
-    <td>${badge(v.paye?"✓ Payé":"📋 Crédit",v.paye?"#10b981":"#f59e0b")}</td>
-  </tr>`).join("");
-
-  updateAlertBadge(d.low_stock+d.expired+d.soon);
-}
-function sc(ic,lbl,val,sub,col){
-  return`<div class="stat"><div class="stat-ic" style="background:${col}22">${ic}</div>
-  <div><div class="stat-lbl">${lbl}</div>
-  <div class="stat-val" style="color:${col}">${val}</div>
-  <div class="stat-sub" style="color:${col}">${sub}</div></div></div>`;
-}
-function updateAlertBadge(n){
-  const b=$("alert-badge");
-  b.style.display=n>0?"inline":"none"; b.textContent=n;
-}
-
-// ─── STOCK ────────────────────────────────────────────────────────────────────
-async function loadStock(){
-  const q=$("sq").value, cat=$("scat").value;
-  allMeds=await api(`/api/medicaments?q=${encodeURIComponent(q)}&cat=${encodeURIComponent(cat)}`);
-  const tb=$("tb-stock");
-  if(!allMeds.length){tb.innerHTML=`<tr><td colspan="9" style="text-align:center;color:var(--mut);padding:2rem">Aucun médicament trouvé</td></tr>`;return;}
-  tb.innerHTML=allMeds.map(m=>{
-    const dl=m.days_left;
-    const isExp=dl<=0,isSoon=dl>0&&dl<=60,isLow=m.quantite<=m.min_stock;
-    let st=badge("✓ OK","#10b981");
-    if(isExp)   st=badge("⛔ Expiré","#ef4444");
-    else if(isSoon) st=badge("⚠ Bientôt","#f59e0b");
-    else if(isLow)  st=badge("📉 Stock bas","#f59e0b");
-    const marge=m.prix_achat>0?((m.prix_vente-m.prix_achat)/m.prix_achat*100).toFixed(0)+"%":"—";
-    const exp=m.expiration?new Date(m.expiration).toLocaleDateString("fr-DZ"):"—";
-    return`<tr>
-      <td><div style="font-weight:700">${m.nom}</div>
-          <div style="font-size:.72rem;color:var(--mut)">${m.fournisseur||""} ${m.code_barre?"· "+m.code_barre:""}</div></td>
-      <td>${badge(m.categorie,"#3b82f6")}</td>
-      <td style="color:${isLow?"#ef4444":"inherit"};font-weight:${isLow?700:400}">
-        ${m.quantite}<span style="color:var(--mut);font-size:.72rem"> /min ${m.min_stock}</span></td>
-      <td style="color:var(--mut)">${fmt(m.prix_achat)} DA</td>
-      <td style="color:var(--grn);font-weight:700">${fmt(m.prix_vente)} DA</td>
-      <td style="color:#6366f1">${marge}</td>
-      <td style="color:${isExp?"#ef4444":isSoon?"#f59e0b":"var(--mut)"}">
-        ${exp}${isSoon?`<div style="font-size:.7rem">${dl}j</div>`:""}</td>
-      <td>${st}</td>
-      <td><div style="display:flex;gap:5px">
-        <button class="btn btn-g btn-ic btn-sm" title="Ajouter au panier" onclick="addToCartById(${m.id})">🛒</button>
-        <button class="btn btn-g btn-ic btn-sm" title="Modifier" onclick="openMedModal(${m.id})">✏️</button>
-        <button class="btn btn-d btn-ic btn-sm" title="Supprimer" onclick="delMed(${m.id})">🗑️</button>
-      </div></td>
-    </tr>`;
-  }).join("");
-}
-function openMedModal(id){
-  const m=id?allMeds.find(x=>x.id===id):{};
-  $("med-m-title").textContent=id?"Modifier médicament":"Ajouter médicament";
-  $("med-id").value=m?.id||"";
-  $("m-nom").value=m?.nom||"";  $("m-cat").value=m?.categorie||"Antibiotiques";
-  $("m-qty").value=m?.quantite||"";  $("m-min").value=m?.min_stock||"";
-  $("m-buy").value=m?.prix_achat||"";  $("m-sell").value=m?.prix_vente||"";
-  $("m-exp").value=m?.expiration||"";  $("m-sup").value=m?.fournisseur||"";
-  $("m-bar").value=m?.code_barre||"";
-  openOv("ov-med");
-}
-async function saveMed(){
-  if(!$("m-nom").value||!$("m-sell").value||!$("m-exp").value||!$("m-qty").value){
-    toast("Veuillez remplir les champs obligatoires (*)",false);return;}
-  const body={nom:$("m-nom").value,categorie:$("m-cat").value,
-    quantite:$("m-qty").value,min_stock:$("m-min").value||10,
-    prix_achat:$("m-buy").value||0,prix_vente:$("m-sell").value,
-    expiration:$("m-exp").value,fournisseur:$("m-sup").value,
-    code_barre:$("m-bar").value};
-  const id=$("med-id").value;
-  await api(id?"/api/medicaments/"+id:"/api/medicaments",id?"PUT":"POST",body);
-  closeOv("ov-med"); loadStock();
-  toast(id?"Médicament mis à jour ✓":"Médicament ajouté ✓");
-}
-async function delMed(id){
-  if(!confirm("Supprimer ce médicament ?"))return;
-  await api("/api/medicaments/"+id,"DELETE");
-  loadStock(); toast("Supprimé",false);
-}
-
-// ─── POS ──────────────────────────────────────────────────────────────────────
-async function loadPOS(){
-  allMeds=await api("/api/medicaments");
-  renderPOS();
-}
-function renderPOS(){
-  const q=($("posq")||{value:""}).value.toLowerCase();
-  const list=allMeds.filter(m=>m.quantite>0&&m.days_left>0&&
-    (m.nom.toLowerCase().includes(q)||m.code_barre.includes(q)));
-  $("pos-grid").innerHTML=list.map(m=>`
-    <div class="mcard" onclick="addToCart(${m.id})">
-      <div style="font-weight:700;font-size:.82rem;margin-bottom:3px">${m.nom}</div>
-      <div style="font-size:.71rem;color:var(--mut);margin-bottom:7px">${m.categorie}</div>
-      <div style="display:flex;justify-content:space-between;align-items:center">
-        <span style="color:var(--grn);font-weight:800;font-size:.92rem">${fmt(m.prix_vente)} DA</span>
-        <span style="font-size:.69rem;color:${m.quantite<=m.min_stock?"#ef4444":"var(--mut)"}">📦 ${m.quantite}</span>
-      </div>
-    </div>`).join("")||`<div style="color:var(--mut);grid-column:1/-1;text-align:center;padding:2rem">Aucun médicament disponible</div>`;
-}
-async function loadClientsForCart(){
-  allClients=await api("/api/clients");
-  const sel=$("cart-client");
-  sel.innerHTML=`<option value="">— Anonyme —</option>`+
-    allClients.map(c=>`<option value="${c.id}">${c.nom}${c.dette>0?" ("+fmt(c.dette)+" DA)":""}</option>`).join("");
-}
-function addToCart(id){
-  const m=allMeds.find(x=>x.id===id);
-  if(!m)return;
-  const ex=cart.find(i=>i.id===id);
-  if(ex){if(ex.qty>=m.quantite){toast("Stock insuffisant",false);return;}ex.qty++;}
-  else cart.push({id:m.id,nom:m.nom,prix:m.prix_vente,prix_achat:m.prix_achat,qty:1,max:m.quantite});
-  renderCart(); toast(m.nom+" ajouté ✓");
-}
-function addToCartById(id){
-  goTo("pos",document.querySelector(".ni:nth-child(3)"));
-  setTimeout(()=>addToCart(id),300);
-}
-function updateQty(id,v){
-  const n=parseInt(v);
-  if(!n||n<=0)cart=cart.filter(i=>i.id!==id);
-  else{const it=cart.find(i=>i.id===id);if(it){if(n>it.max){toast("Stock insuffisant",false);return;}it.qty=n;}}
-  renderCart();
-}
-function clearCart(){cart=[];renderCart();}
-function renderCart(){
-  const empty=$("cart-empty"),foot=$("cart-foot"),items=$("cart-items");
-  if(!cart.length){empty.style.display="flex";foot.style.display="none";items.innerHTML="";return;}
-  empty.style.display="none";foot.style.display="block";
-  items.innerHTML=cart.map(i=>`
-    <div class="ci">
-      <div style="flex:1">
-        <div style="font-weight:700;font-size:.82rem">${i.nom}</div>
-        <div style="font-size:.73rem;color:var(--grn)">${fmt(i.prix)} DA × ${i.qty} = ${fmt(i.prix*i.qty)} DA</div>
-      </div>
-      <div style="display:flex;align-items:center;gap:5px">
-        <button class="qb" onclick="updateQty(${i.id},${i.qty-1})">−</button>
-        <span style="min-width:20px;text-align:center;font-size:.83rem">${i.qty}</span>
-        <button class="qb" onclick="updateQty(${i.id},${i.qty+1})">+</button>
-      </div>
-    </div>`).join("");
-  calcTotal();
-}
-function calcTotal(){
-  const disc=+($("cart-disc")||{value:0}).value||0;
-  const sub=cart.reduce((a,i)=>a+i.prix*i.qty,0);
-  const discAmt=sub*disc/100;
-  const total=sub-discAmt;
-  $("total-box").innerHTML=`
-    <div class="tr"><span style="color:var(--mut)">Sous-total:</span><span>${fmt(sub)} DA</span></div>
-    ${disc>0?`<div class="tr"><span style="color:#f59e0b">Remise ${disc}%:</span><span style="color:#f59e0b">−${fmt(discAmt.toFixed(0))} DA</span></div>`:""}
-    <div class="tr" style="font-weight:800;font-size:1rem;color:var(--grn)"><span>Total:</span><span>${fmt(total.toFixed(0))} DA</span></div>`;
-}
-async function completeSale(){
-  if(!cart.length){toast("Panier vide",false);return;}
-  const disc=+$("cart-disc").value||0;
-  const credit=$("cart-mode").value==="credit";
-  const client_id=$("cart-client").value||null;
-  const articles=cart.map(i=>({id:i.id,nom:i.nom,qty:i.qty,prix:i.prix,prix_achat:i.prix_achat}));
-  await api("/api/ventes","POST",{articles,remise:disc,credit,client_id:client_id?+client_id:null});
-  cart=[];renderCart();$("cart-disc").value=0;$("cart-mode").value="cash";
-  allMeds=await api("/api/medicaments"); renderPOS();
-  toast(credit?"Vente à crédit enregistrée ✓":"Vente enregistrée ✓");
-}
-
-// ─── CLIENTS ──────────────────────────────────────────────────────────────────
-async function loadAllClients(){
-  allClients=await api("/api/clients");
-  renderClients();
-}
-function renderClients(){
-  const q=($("csq")||{value:""}).value.toLowerCase();
-  const list=allClients.filter(c=>c.nom.toLowerCase().includes(q)||c.phone.includes(q));
-  $("client-grid").innerHTML=list.map(c=>`
-    <div class="cc">
-      <div style="display:flex;justify-content:space-between;align-items:flex-start">
-        <div>
-          <div style="font-weight:800;font-size:.95rem">${c.nom}</div>
-          ${c.phone?`<div style="font-size:.77rem;color:var(--mut)">📞 ${c.phone}</div>`:""}
-          ${c.adresse?`<div style="font-size:.74rem;color:var(--mut)">📍 ${c.adresse}</div>`:""}
-        </div>
-        <div style="display:flex;gap:5px">
-          <button class="btn btn-g btn-ic btn-sm" onclick="openClientModal(${c.id})">✏️</button>
-          <button class="btn btn-d btn-ic btn-sm" onclick="delClient(${c.id})">🗑️</button>
-        </div>
-      </div>
-      ${c.notes?`<div style="font-size:.76rem;color:#8b5cf6;margin:7px 0">📝 ${c.notes}</div>`:""}
-      <div class="debt-row">
-        <div>
-          <div style="font-size:.72rem;color:var(--mut)">Solde dû</div>
-          <div style="font-weight:800;font-size:1.05rem;color:${c.dette>0?"#ef4444":"#10b981"}">${fmt(c.dette)} DA</div>
-        </div>
-        ${c.dette>0?`<button class="btn btn-s btn-sm" onclick="openDebtModal(${c.id})">✓ Rembourser</button>`:
-          `<span style="font-size:.75rem;color:var(--grn)">✓ Soldé</span>`}
-      </div>
-    </div>`).join("")||`<div style="color:var(--mut);text-align:center;padding:3rem;grid-column:1/-1">Aucun client trouvé</div>`;
-}
-function openClientModal(id){
-  const c=id?allClients.find(x=>x.id===id):{};
-  $("cl-m-title").textContent=id?"Modifier client":"Nouveau client";
-  $("cl-id").value=c?.id||"";  $("cl-nom").value=c?.nom||"";
-  $("cl-phone").value=c?.phone||"";  $("cl-addr").value=c?.adresse||"";
-  $("cl-notes").value=c?.notes||"";
-  openOv("ov-client");
-}
-async function saveClient(){
-  if(!$("cl-nom").value){toast("Veuillez entrer le nom",false);return;}
-  const id=$("cl-id").value;
-  const body={nom:$("cl-nom").value,phone:$("cl-phone").value,
-    adresse:$("cl-addr").value,notes:$("cl-notes").value};
-  await api(id?"/api/clients/"+id:"/api/clients",id?"PUT":"POST",body);
-  closeOv("ov-client"); loadAllClients();
-  toast(id?"Client mis à jour ✓":"Client ajouté ✓");
-}
-async function delClient(id){
-  if(!confirm("Supprimer ce client ?"))return;
-  await api("/api/clients/"+id,"DELETE");
-  loadAllClients(); toast("Supprimé",false);
-}
-function openDebtModal(id){
-  const c=allClients.find(x=>x.id===id);
-  $("debt-cid").value=id; $("debt-cname").textContent=c.nom;
-  $("debt-amt").textContent=fmt(c.dette)+" DA"; $("debt-pay").value=c.dette;
-  $("debt-note").value=""; openOv("ov-debt");
-}
-async function payDebt(){
-  const id=$("debt-cid").value, amt=+$("debt-pay").value;
-  if(!amt||amt<=0){toast("Montant invalide",false);return;}
-  await api("/api/clients/"+id+"/payer","POST",{montant:amt,note:$("debt-note").value});
-  closeOv("ov-debt"); loadAllClients(); toast("Paiement enregistré ✓");
-}
-
-// ─── HISTORIQUE ───────────────────────────────────────────────────────────────
-async function loadHisto(){
-  const ventes=await api("/api/ventes");
-  const from=$("histo-from").value, to=$("histo-to").value;
-  const list=ventes.filter(v=>{
-    if(from&&v.date<from)return false;
-    if(to&&v.date>to)return false;
-    return true;
-  });
-  const tb=$("tb-histo");
-  if(!list.length){tb.innerHTML=`<tr><td colspan="9" style="text-align:center;color:var(--mut);padding:2rem">Aucune vente</td></tr>`;return;}
-  tb.innerHTML=list.map((v,i)=>`<tr>
-    <td style="color:var(--mut)">${list.length-i}</td>
-    <td>${v.date}</td><td style="color:var(--mut)">${v.heure}</td>
-    <td>${v.client_nom}</td>
-    <td style="color:var(--mut);font-size:.77rem">${v.articles.map(a=>a.nom+"×"+a.qty).join(", ")}</td>
-    <td style="color:#f59e0b">${v.remise>0?v.remise+"%":"—"}</td>
-    <td style="font-weight:700">${fmt(v.total.toFixed(0))} DA</td>
-    <td style="color:#6366f1">${fmt(v.benefice.toFixed(0))} DA</td>
-    <td>${badge(v.paye?"✓ Payé":"📋 Crédit",v.paye?"#10b981":"#f59e0b")}</td>
-  </tr>`).join("");
-}
-function clearHistoFilter(){$("histo-from").value="";$("histo-to").value="";loadHisto();}
-
-// ─── ALERTES ──────────────────────────────────────────────────────────────────
-async function loadAlertes(){
-  const meds=await api("/api/medicaments");
-  const expired=meds.filter(m=>m.days_left<=0);
-  const soon=meds.filter(m=>m.days_left>0&&m.days_left<=60);
-  const low=meds.filter(m=>m.quantite<=m.min_stock&&m.days_left>0);
-  let h="";
-  if(expired.length){
-    h+=`<div class="asec danger"><div style="font-weight:700;color:#ef4444;margin-bottom:.9rem">⛔ Médicaments expirés (${expired.length})</div>
-    <div style="overflow-x:auto"><table><thead><tr><th>Médicament</th><th>Quantité</th><th>Expiration</th></tr></thead><tbody>
-    ${expired.map(m=>`<tr><td style="color:#ef4444;font-weight:700">${m.nom}</td><td>${m.quantite}</td>
-    <td style="color:#ef4444">${new Date(m.expiration).toLocaleDateString("fr-DZ")}</td></tr>`).join("")}
-    </tbody></table></div></div>`;
-  }
-  if(soon.length){
-    h+=`<div class="asec warn"><div style="font-weight:700;color:#f59e0b;margin-bottom:.9rem">⚠️ Expirent bientôt (${soon.length})</div>
-    <div style="overflow-x:auto"><table><thead><tr><th>Médicament</th><th>Quantité</th><th>Jours restants</th><th>Date</th></tr></thead><tbody>
-    ${soon.sort((a,b)=>a.days_left-b.days_left).map(m=>`<tr><td style="font-weight:700">${m.nom}</td><td>${m.quantite}</td>
-    <td style="color:#f59e0b;font-weight:800">${m.days_left} jours</td>
-    <td style="color:var(--mut)">${new Date(m.expiration).toLocaleDateString("fr-DZ")}</td></tr>`).join("")}
-    </tbody></table></div></div>`;
-  }
-  if(low.length){
-    h+=`<div class="asec warn"><div style="font-weight:700;color:#f59e0b;margin-bottom:.9rem">📦 Stock faible (${low.length})</div>
-    <div style="overflow-x:auto"><table><thead><tr><th>Médicament</th><th>Qté actuelle</th><th>Minimum</th><th>Fournisseur</th></tr></thead><tbody>
-    ${low.map(m=>`<tr><td style="font-weight:700">${m.nom}</td><td style="color:#ef4444;font-weight:800">${m.quantite}</td>
-    <td style="color:var(--mut)">${m.min_stock}</td><td style="color:var(--mut)">${m.fournisseur||"—"}</td></tr>`).join("")}
-    </tbody></table></div></div>`;
-  }
-  if(!h)h=`<div style="text-align:center;color:var(--grn);padding:4rem;font-size:1.1rem">✅ Aucune alerte — Tout est en ordre !</div>`;
-  $("alertes-content").innerHTML=h;
-}
-
-// ─── RAPPORTS ─────────────────────────────────────────────────────────────────
-async function loadRapports(){
-  const [dash,rpt]=await Promise.all([api("/api/dashboard"),api("/api/rapports")]);
-  $("rpt-stats").innerHTML=
-    sc("💰","CA Total",fmt(dash.total_rev)+" DA","Toutes ventes","#3b82f6")+
-    sc("📈","Bénéfice total",fmt(dash.total_profit)+" DA","Marge nette","#10b981")+
-    sc("🗓","Ventes ce mois",fmt(dash.month_rev)+" DA","Mois en cours","#6366f1")+
-    sc("💳","Dettes totales",fmt(dash.total_debt)+" DA","Clients débiteurs","#f59e0b")+
-    sc("📦","Valeur du stock",fmt(rpt.total_stock_value)+" DA","Prix achat","#8b5cf6");
-
-  $("top-meds").innerHTML=rpt.top_meds.length===0?
-    `<div style="color:var(--mut);text-align:center;padding:1rem">Aucune donnée</div>`:
-    rpt.top_meds.map((m,i)=>`
-    <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid rgba(30,45,69,.5)">
-      <div style="display:flex;align-items:center;gap:9px">
-        <span style="width:22px;height:22px;background:#3b82f622;color:#3b82f6;
-          border-radius:6px;display:flex;align-items:center;justify-content:center;
-          font-size:.7rem;font-weight:800">${i+1}</span>
-        <span style="font-size:.83rem">${m.nom}</span>
-      </div>
-      ${badge(m.qty+" unités","#3b82f6")}
-    </div>`).join("");
-
-  $("stock-val").innerHTML=rpt.stock_value.map(x=>`
-    <div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid rgba(30,45,69,.5)">
-      <span style="font-size:.83rem">${x.cat}</span>
-      <span style="color:var(--grn);font-weight:700;font-size:.83rem">${fmt(x.val)} DA</span>
-    </div>`).join("")+
-    `<div style="display:flex;justify-content:space-between;padding:10px 0 0;font-weight:800">
-      <span>Total</span><span style="color:#3b82f6">${fmt(rpt.total_stock_value)} DA</span></div>`;
-
-  const dt=$("debt-tbl");
-  if(!rpt.clients_with_debt.length){dt.innerHTML=`<tr><td colspan="3" style="text-align:center;color:var(--mut);padding:1.5rem">Aucune dette</td></tr>`;}
-  else dt.innerHTML=rpt.clients_with_debt.map(c=>`<tr>
-    <td style="font-weight:700">${c.nom}</td>
-    <td style="color:var(--mut)">${c.phone||"—"}</td>
-    <td style="color:#ef4444;font-weight:800">${fmt(c.dette)} DA</td>
-  </tr>`).join("");
-}
-
-// ─── INIT ─────────────────────────────────────────────────────────────────────
-document.querySelectorAll(".ov").forEach(o=>o.addEventListener("click",function(e){
-  if(e.target===this)this.classList.remove("open");
-}));
-loadDash();
+const obs = new IntersectionObserver(entries => {
+  entries.forEach(e => { if(e.isIntersecting) e.target.classList.add('visible'); });
+}, { threshold: 0.1 });
+document.querySelectorAll('.reveal').forEach(el => obs.observe(el));
 </script>
 </body>
 </html>
